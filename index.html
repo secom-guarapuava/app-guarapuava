@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0B3D91" />
+<title>Guarapuava Digital — Protótipo</title>
+<link rel="icon" href="brasao-icon.png" />
+<meta name="description" content="Protótipo do app oficial da Prefeitura de Guarapuava. Serviços, notícias e orientações em um só lugar." />
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="application-name" content="Guarapuava Digital" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Guarapuava Digital" />
+<style>
+/* ============================================================
+   GUARAPUAVA DIGITAL — DESIGN SYSTEM (tokens)
+   ============================================================ */
+:root{
+  /* Azul institucional + escala */
+  --azul-900:#0A2A63; --azul-800:#0B3D91; --azul-700:#0E4FB8;
+  --azul-600:#1565E0; --azul-500:#2C7BF2; --azul-400:#5AA0FF;
+  --azul-300:#9CC6FF; --azul-100:#E8F1FF; --azul-50:#F3F8FF;
+  /* Gradientes */
+  --grad-primary:linear-gradient(135deg,#0B3D91 0%,#1565E0 58%,#2C7BF2 100%);
+  --grad-deep:linear-gradient(160deg,#0A2A63 0%,#0E4FB8 100%);
+  /* Tinta / neutros */
+  --ink-900:#0F1B2D; --ink-700:#33445C; --ink-500:#5B6B82; --ink-400:#8A98AC;
+  --line:#E4EAF2; --line-2:#EEF2F8; --surface:#FFFFFF; --bg:#EAEFF6;
+  /* Feedback (sempre com ícone+texto, nunca só cor) */
+  --ok:#13864B; --ok-bg:#E4F6EC;
+  --warn:#B5650A; --warn-bg:#FDEFD8;
+  --danger:#C92A2A; --danger-bg:#FCE8E8;
+  --info:#1565E0; --info-bg:#E8F1FF;
+  /* Raio / sombra / espaço */
+  --r-xl:26px; --r-lg:20px; --r-md:15px; --r-sm:11px; --r-pill:999px;
+  --sh-1:0 1px 2px rgba(15,27,45,.06),0 2px 8px rgba(15,27,45,.05);
+  --sh-2:0 6px 18px rgba(11,61,145,.10),0 2px 6px rgba(15,27,45,.06);
+  --sh-hero:0 14px 34px rgba(11,61,145,.30);
+  --font:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font); color:var(--ink-900); background:#dde4ee;
+  background-image:radial-gradient(1200px 600px at 70% -10%,#e9f0fb 0,#d7e0ec 60%,#cdd7e6 100%);
+  min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  padding:26px 14px; gap:14px;
+}
+.proto-label{display:flex;align-items:center;gap:8px;color:#3a567f;font-size:13px;font-weight:600;letter-spacing:.2px}
+.proto-label b{color:#0B3D91}
+.proto-dot{width:7px;height:7px;border-radius:50%;background:#1565E0;box-shadow:0 0 0 4px rgba(21,101,224,.18)}
+
+/* ===== Device frame ===== */
+.device{
+  width:392px; max-width:100%; height:850px; max-height:calc(100vh - 70px);
+  background:#0A2A63; border-radius:46px; padding:13px;
+  box-shadow:0 30px 70px rgba(10,42,99,.40),0 6px 18px rgba(0,0,0,.18);
+  position:relative; flex:0 0 auto;
+}
+.screen-wrap{
+  position:relative; width:100%; height:100%; background:var(--bg);
+  border-radius:34px; overflow:hidden; display:flex; flex-direction:column;
+}
+/* status bar */
+.statusbar{
+  position:absolute;top:0;left:0;right:0;height:44px;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;color:#fff;font-size:13px;font-weight:600;pointer-events:none;
+}
+.statusbar .sb-right{display:flex;align-items:center;gap:6px}
+.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:118px;height:26px;background:#0A2A63;border-radius:0 0 16px 16px;z-index:41}
+
+/* scroll viewport */
+.viewport{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+.viewport::-webkit-scrollbar{width:0}
+.screen{display:none;animation:fade .28s ease}
+.screen.is-active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== Gradient top / header ===== */
+.top{background:var(--grad-primary);color:#fff;padding:52px 18px 20px;position:relative;overflow:hidden}
+.top::after{content:"";position:absolute;width:240px;height:240px;right:-70px;top:-90px;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);border-radius:50%}
+.top.compact{padding-bottom:18px}
+.brandrow{display:flex;align-items:center;gap:11px;position:relative;z-index:2}
+.brandrow .brasao{height:46px;width:auto;flex:0 0 auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.28))}
+.brandrow .bt{flex:1;min-width:0}
+.brandrow .bt small{display:block;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;opacity:.82;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brandrow .bt h1{margin:1px 0 0;font-size:17px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:42px;height:42px;border-radius:14px;border:0;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center;cursor:pointer;position:relative;flex:0 0 auto}
+.iconbtn:active{transform:scale(.94)}
+.badge-dot{position:absolute;top:8px;right:9px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#FF5A5A;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;border:2px solid #1457c4}
+
+.hero-greet{position:relative;z-index:2;margin-top:18px}
+.hero-greet .hi{font-size:23px;font-weight:800;line-height:1.15}
+.hero-greet .sub{margin-top:5px;font-size:13px;opacity:.9;max-width:90%}
+/* search */
+.search{position:relative;z-index:2;margin-top:16px;display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:13px 14px;box-shadow:0 8px 20px rgba(10,42,99,.22)}
+.search .ico{color:var(--azul-600);flex:0 0 auto}
+.search input{border:0;outline:0;font-family:var(--font);font-size:15px;color:var(--ink-900);width:100%;background:transparent}
+.search input::placeholder{color:var(--ink-400)}
+
+/* page title (inner screens) */
+.page-title{position:relative;z-index:2;margin-top:14px}
+.page-title h2{margin:0;font-size:22px;font-weight:800}
+.page-title p{margin:5px 0 0;font-size:13px;opacity:.9}
+
+/* ===== Sheet (content over gradient) ===== */
+.sheet{background:var(--bg);border-radius:22px 22px 0 0;margin-top:-14px;position:relative;z-index:3;padding:20px 16px 8px}
+.section{margin-bottom:22px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 12px}
+.section-head h3{margin:0;font-size:16px;font-weight:800;color:var(--ink-900)}
+.section-head .link{font-size:13px;font-weight:700;color:var(--azul-600);background:none;border:0;cursor:pointer;display:flex;align-items:center;gap:2px}
+.muted{color:var(--ink-500)}
+
+/* ===== Hero/destaque card ===== */
+.feature{position:relative;border-radius:var(--r-lg);overflow:hidden;background:var(--grad-deep);color:#fff;padding:20px;box-shadow:var(--sh-hero)}
+.feature::after{content:"";position:absolute;right:-50px;bottom:-70px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);border-radius:50%}
+.feature .tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);padding:5px 11px;border-radius:var(--r-pill);font-size:11.5px;font-weight:700;letter-spacing:.3px}
+.feature h4{margin:12px 0 6px;font-size:20px;font-weight:800;line-height:1.2;position:relative;z-index:2}
+.feature p{margin:0;font-size:13px;opacity:.92;position:relative;z-index:2;max-width:88%}
+.feature .btn{margin-top:15px}
+
+/* ===== Buttons ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;font-family:var(--font);font-weight:700;font-size:15px;border-radius:14px;padding:13px 18px;text-decoration:none;transition:transform .06s,box-shadow .2s}
+.btn:active{transform:scale(.97)}
+.btn-light{background:#fff;color:var(--azul-700)}
+.btn-primary{background:var(--azul-600);color:#fff;box-shadow:0 6px 16px rgba(21,101,224,.32)}
+.btn-ghost{background:var(--azul-100);color:var(--azul-700)}
+.btn-block{display:flex;width:100%}
+.btn-danger{background:var(--danger);color:#fff}
+
+/* ===== Quick access grid (home) ===== */
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.quick .qi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--sh-1);transition:transform .08s,box-shadow .2s}
+.quick .qi:active{transform:scale(.96)}
+.qi .chip{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--azul-100);color:var(--azul-700)}
+.qi .chip .ico{width:22px;height:22px}
+.qi span{font-size:12.5px;font-weight:700;color:var(--ink-700);text-align:center;line-height:1.2}
+
+/* ===== Service list cards ===== */
+.srv{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;cursor:pointer;box-shadow:var(--sh-1);margin-bottom:11px;transition:transform .08s}
+.srv:active{transform:scale(.98)}
+.srv .chip{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:0 0 auto}
+.srv .chip .ico{width:20px;height:20px}
+.srv .tx{flex:1;min-width:0}
+.srv .tx b{display:block;font-size:15px;font-weight:700;color:var(--ink-900)}
+.srv .tx small{display:block;font-size:12.5px;color:var(--ink-500);margin-top:2px}
+.srv .go{color:var(--ink-400);flex:0 0 auto}
+
+/* ===== Chips / filtros ===== */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin:0 -2px}
+.chips::-webkit-scrollbar{height:0}
+.chip-f{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--ink-700);font-size:13px;font-weight:700;padding:9px 14px;border-radius:var(--r-pill);cursor:pointer;white-space:nowrap}
+.chip-f.is-on{background:var(--azul-600);color:#fff;border-color:var(--azul-600)}
+
+/* ===== News cards ===== */
+.news{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;box-shadow:var(--sh-1);margin-bottom:14px}
+.news .thumb{height:150px;position:relative;display:flex;align-items:flex-end;padding:12px;overflow:hidden}
+.news .thumb .scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.news .thumb .pill{position:relative;z-index:2;box-shadow:0 2px 8px rgba(15,27,45,.16)}
+.news.compact{display:flex;align-items:center;gap:12px;padding:11px}
+.news.compact .thumb{height:62px;width:62px;border-radius:var(--r-sm);flex:0 0 auto;padding:0;display:grid;place-items:center}
+.news.compact .thumb .thumb-ic{width:24px;height:24px;color:rgba(255,255,255,.95)}
+.news.compact .body{padding:0;flex:1;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;letter-spacing:.3px;padding:5px 10px;border-radius:var(--r-pill);background:#fff;color:var(--azul-700)}
+.news .body{padding:13px 14px 15px}
+.news .body h4{margin:0 0 5px;font-size:15.5px;font-weight:800;line-height:1.25;color:var(--ink-900)}
+.news.compact .body h4{font-size:14px;margin:0}
+.news .body p{margin:0;font-size:13px;color:var(--ink-500);line-height:1.4}
+.news .meta{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;color:var(--ink-400);font-weight:600}
+.news.compact .meta{margin-top:6px}
+
+/* ===== Alert cards ===== */
+.alert{display:flex;gap:12px;border-radius:var(--r-md);padding:14px;align-items:flex-start;border:1px solid transparent;position:relative;overflow:hidden}
+.alert::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
+.alert .ico{flex:0 0 auto;width:22px;height:22px;margin-top:1px}
+.alert .tx b{display:block;font-size:14.5px;font-weight:800;margin-bottom:3px}
+.alert .tx p{margin:0;font-size:13px;line-height:1.4}
+.alert .tx .lvl{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.alert.danger{background:var(--danger-bg);border-color:#f3c4c4;color:#7a1414}.alert.danger::before{background:var(--danger)}.alert.danger .ico{color:var(--danger)}
+.alert.warn{background:var(--warn-bg);border-color:#f3dcb0;color:#6e3f06}.alert.warn::before{background:var(--warn)}.alert.warn .ico{color:var(--warn)}
+.alert.info{background:var(--info-bg);border-color:#cfe0fb;color:#0c3a86}.alert.info::before{background:var(--info)}.alert.info .ico{color:var(--info)}
+.alert.ok{background:var(--ok-bg);border-color:#bfe6cd;color:#0c5a33}.alert.ok::before{background:var(--ok)}.alert.ok .ico{color:var(--ok)}
+
+/* ===== Generic info card ===== */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px;box-shadow:var(--sh-1)}
+.card+.card{margin-top:11px}
+.card h4{margin:0 0 6px;font-size:15px;font-weight:800}
+.card p{margin:0;font-size:13.5px;color:var(--ink-500);line-height:1.5}
+
+/* two-up health choice */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.choice{border-radius:var(--r-lg);padding:16px;color:#fff;cursor:pointer;min-height:150px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.choice .ico{width:24px;height:24px}
+.choice b{font-size:18px;font-weight:800;margin-top:10px}
+.choice small{font-size:12px;opacity:.92;margin-top:4px;line-height:1.35}
+.choice .ver{margin-top:auto;font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:3px}
+.choice.ubs{background:linear-gradient(155deg,#13864B,#1FA862)}
+.choice.upa{background:linear-gradient(155deg,#C92A2A,#E8543B)}
+
+/* list of small items (quando ir) */
+.tic{display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:8px}
+.tic .ico{width:20px;height:20px;flex:0 0 auto}
+.tic.g .ico{color:var(--ok)} .tic.r .ico{color:var(--danger)}
+.tic b{font-size:14px;font-weight:700}
+.tic small{display:block;font-size:12px;color:var(--ink-500)}
+
+/* phone/contact rows */
+.contact{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;margin-bottom:9px;text-decoration:none;color:inherit}
+.contact .chip{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--azul-100);color:var(--azul-700);flex:0 0 auto}
+.contact.urgent .chip{background:var(--danger-bg);color:var(--danger)}
+.contact .tx{flex:1}.contact .tx b{display:block;font-size:14.5px;font-weight:700}.contact .tx small{font-size:12.5px;color:var(--ink-500)}
+.contact .num{font-size:18px;font-weight:800;color:var(--azul-700)}
+.contact.urgent .num{color:var(--danger)}
+
+/* map placeholder */
+.mapbox{height:170px;border-radius:var(--r-lg);overflow:hidden;position:relative;border:1px solid var(--line);background:
+  linear-gradient(0deg,rgba(11,61,145,.05),rgba(11,61,145,.05)),
+  repeating-linear-gradient(0deg,#dde7f4 0 1px,transparent 1px 26px),
+  repeating-linear-gradient(90deg,#dde7f4 0 1px,transparent 1px 26px),#eef3fa;
+  display:grid;place-items:center}
+.mapbox .road{position:absolute;background:#cdd9ea}
+.mapbox .r1{top:54%;left:0;right:0;height:14px;transform:rotate(-7deg)}
+.mapbox .r2{top:0;bottom:0;left:38%;width:13px;transform:rotate(6deg)}
+.mapbox .pin{position:absolute;color:var(--danger);filter:drop-shadow(0 4px 6px rgba(0,0,0,.2))}
+.mapbox .tagm{position:relative;z-index:2;background:rgba(255,255,255,.92);padding:8px 14px;border-radius:var(--r-pill);font-size:12.5px;font-weight:700;color:var(--ink-700);box-shadow:var(--sh-1);display:flex;gap:6px;align-items:center}
+
+/* blockage card */
+.block{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:15px;box-shadow:var(--sh-1);margin-bottom:12px}
+.block .bh{display:flex;align-items:flex-start;gap:10px}
+.block .bh .ico{color:var(--warn);flex:0 0 auto;margin-top:2px}
+.block .bh b{font-size:15px;font-weight:800;line-height:1.25}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;padding:5px 10px;border-radius:var(--r-pill);letter-spacing:.3px}
+.status.run{background:var(--warn-bg);color:var(--warn)}
+.status.prog{background:var(--info-bg);color:var(--info)}
+.status.done{background:var(--ok-bg);color:var(--ok)}
+.kv{display:flex;gap:8px;font-size:13px;margin-top:9px;color:var(--ink-700);align-items:flex-start}
+.kv .k{color:var(--ink-400);min-width:74px;font-weight:600;flex:0 0 auto}
+.kv .v{font-weight:600;flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* notification row */
+.notif{display:flex;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;margin-bottom:10px;position:relative;overflow:hidden}
+.notif::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--azul-400)}
+.notif.urgent::before{background:var(--danger)} .notif.saude::before{background:var(--ok)} .notif.transito::before{background:var(--warn)} .notif.evento::before{background:#7a5af0}
+.notif .chip{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--azul-100);color:var(--azul-700);flex:0 0 auto}
+.notif.urgent .chip{background:var(--danger-bg);color:var(--danger)}
+.notif .tx{flex:1;min-width:0}
+.notif .tx .lab{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-400)}
+.notif .tx b{display:block;font-size:14.5px;font-weight:700;margin:1px 0 3px}
+.notif .tx p{margin:0;font-size:13px;color:var(--ink-500);line-height:1.4}
+.notif .tx .t{font-size:11.5px;color:var(--ink-400);margin-top:6px;font-weight:600}
+
+/* "Mais" list */
+.mlist{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--sh-1)}
+.mrow{display:flex;align-items:center;gap:13px;padding:15px 15px;cursor:pointer;text-decoration:none;color:inherit;border-bottom:1px solid var(--line-2)}
+.mrow:last-child{border-bottom:0}
+.mrow .ico{color:var(--azul-600);flex:0 0 auto}
+.mrow b{flex:1;font-size:14.5px;font-weight:700}
+.mrow .go{color:var(--ink-400)}
+.mgroup-t{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-400);margin:18px 4px 9px}
+
+/* toggle */
+.toggle{width:46px;height:28px;border-radius:var(--r-pill);background:#cdd6e3;position:relative;cursor:pointer;flex:0 0 auto;transition:background .2s}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.toggle.on{background:var(--azul-600)} .toggle.on::after{left:21px}
+
+/* painel */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;box-shadow:var(--sh-1)}
+.kpi .ico{width:22px;height:22px;color:var(--azul-600)}
+.kpi .n{font-size:24px;font-weight:800;margin-top:8px;letter-spacing:-.5px}
+.kpi .l{font-size:12px;color:var(--ink-500);margin-top:2px;font-weight:600}
+.kpi .d{font-size:11.5px;font-weight:800;margin-top:6px;display:inline-flex;gap:3px;align-items:center}
+.kpi .d.up{color:var(--ok)} .kpi .d.dn{color:var(--danger)}
+.bars{display:flex;align-items:flex-end;gap:8px;height:120px;padding:6px 2px 0}
+.bars .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bars .col .bar{width:100%;max-width:26px;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#2C7BF2,#1565E0)}
+.bars .col small{font-size:10.5px;color:var(--ink-400);font-weight:700}
+.ranklist .rk{margin-bottom:11px}
+.ranklist .rh{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:5px}
+.ranklist .rh span:last-child{color:var(--ink-500)}
+.track{height:9px;border-radius:9px;background:#e4ebf4;overflow:hidden}
+.track .fill{height:100%;border-radius:9px;background:linear-gradient(90deg,#5AA0FF,#1565E0)}
+
+/* disclaimer / note */
+.note{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:var(--ink-500);background:var(--line-2);border-radius:var(--r-sm);padding:12px;line-height:1.45}
+.note .ico{width:18px;height:18px;flex:0 0 auto;color:var(--ink-400);margin-top:1px}
+
+/* detail screen */
+.detail-hero{height:210px;position:relative;display:flex;align-items:flex-end;padding:16px;overflow:hidden}
+.detail-hero .scene{position:absolute;inset:0;width:100%;height:100%}
+.detail-hero .pill{position:relative;z-index:2;box-shadow:0 2px 8px rgba(15,27,45,.16)}
+.back-btn{position:absolute;top:50px;left:16px;z-index:30}
+.detail-body{background:var(--bg);border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:20px 16px 30px}
+.detail-body h2{margin:0 0 8px;font-size:21px;font-weight:800;line-height:1.25}
+.detail-body .lead{font-size:15px;color:var(--ink-700);line-height:1.5;font-weight:600}
+.detail-body .txt{font-size:14.5px;color:var(--ink-500);line-height:1.65;margin-top:14px}
+
+/* ===== Bottom nav ===== */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:76px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.tab{flex:1;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--ink-400);font-family:var(--font);padding-top:10px}
+.tab .ico{width:22px;height:22px}
+.tab span{font-size:11px;font-weight:700}
+.tab.is-on{color:var(--azul-600)}
+.tab.is-on .ico{transform:translateY(-1px)}
+.tab .dot{position:absolute;top:14px;margin-left:18px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
+
+/* overlay screen (notificações) */
+.sheet-screen{position:absolute;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column}
+.sheet-screen.is-active{display:flex}
+
+/* ===== Ícones: tamanho-base + ajustes por contexto (corrige ícones gigantes) ===== */
+.ico{display:inline-block;vertical-align:middle;width:20px;height:20px;flex:0 0 auto}
+.iconbtn .ico{width:22px;height:22px}
+.btn .ico{width:18px;height:18px}
+.feature .tag .ico{width:15px;height:15px}
+.section-head .link .ico{width:15px;height:15px}
+.pill .ico{width:13px;height:13px}
+.meta .ico,.detail-body .meta .ico{width:14px;height:14px}
+.srv .go .ico,.mrow .go .ico{width:17px;height:17px}
+.status .ico{width:13px;height:13px}
+.contact .chip .ico{width:21px;height:21px}
+.block .bh .ico{width:21px;height:21px}
+.notif .chip .ico{width:21px;height:21px}
+.notif .tx .t .ico{width:13px;height:13px}
+.mrow .ico{width:21px;height:21px}
+.mapbox .pin .ico{width:30px;height:30px}
+.mapbox .tagm .ico{width:16px;height:16px}
+.choice .ver .ico{width:14px;height:14px}
+.kpi .d .ico{width:13px;height:13px}
+.center{text-align:center}
+.spacer{height:6px}
+
+/* ===== Movimento sutil ("app vivo") — discreto, sem exageros ===== */
+.feature{background-size:170% 170%;animation:liveGrad 16s ease-in-out infinite}
+@keyframes liveGrad{0%{background-position:0% 40%}50%{background-position:100% 60%}100%{background-position:0% 40%}}
+.badge-dot,.tab .dot{animation:livePulse 2.6s ease-in-out infinite}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,90,90,.45)}50%{box-shadow:0 0 0 6px rgba(255,90,90,0)}}
+.qi,.srv,.news{transition:transform .12s ease,box-shadow .2s ease}
+.qi:hover,.srv:hover,.news:hover{box-shadow:var(--sh-2)}
+@media(prefers-reduced-motion:reduce){.feature,.badge-dot,.tab .dot,.screen{animation:none}}
+
+/* ===== Mobile fullscreen (navegador do celular) ===== */
+@media(max-width:440px){
+  body{padding:0;background:#0B3D91}
+  .proto-label{display:none}
+  .device{width:100vw;height:100vh;height:100dvh;max-height:none;border-radius:0;padding:0}
+  .screen-wrap{border-radius:0}
+  .notch,.statusbar{display:none}
+  .top{padding-top:calc(env(safe-area-inset-top) + 22px)}
+  .top.compact{padding-top:calc(env(safe-area-inset-top) + 18px)}
+  .back-btn{top:calc(env(safe-area-inset-top) + 12px)}
+}
+
+/* ===== App instalado (PWA standalone): tela cheia + safe area ===== */
+@media all and (display-mode:standalone){
+  body{padding:0;background:#0B3D91}
+  .proto-label{display:none}
+  .device{width:100vw;height:100vh;height:100dvh;max-height:none;border-radius:0;padding:0}
+  .screen-wrap{border-radius:0}
+  .notch,.statusbar{display:none}
+  .top{padding-top:calc(env(safe-area-inset-top) + 22px)}
+  .top.compact{padding-top:calc(env(safe-area-inset-top) + 18px)}
+  .back-btn{top:calc(env(safe-area-inset-top) + 12px)}
+}
+</style>
+</head>
+<body>
+<div class="proto-label"><span class="proto-dot"></span> Protótipo navegável — <b>Guarapuava Digital</b></div>
+
+<div class="device">
+  <div class="screen-wrap">
+    <div class="notch"></div>
+    <div class="statusbar">
+      <span id="clock">09:41</span>
+      <span class="sb-right">5G&nbsp; ▮▮▮ &nbsp;87%</span>
+    </div>
+    <div class="viewport" id="viewport"><!-- screens injected --></div>
+    <nav class="tabbar" id="tabbar"></nav>
+    <div class="sheet-screen" id="notifScreen"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   GUARAPUAVA DIGITAL — PROTÓTIPO
+   ------------------------------------------------------------
+   EDITE AQUI: todos os textos, links e dados ficam no objeto
+   CONFIG abaixo. Para integrar com API depois, basta substituir
+   estes arrays por chamadas fetch() mantendo o mesmo formato.
+   ============================================================ */
+const CONFIG = {
+  app:{ nome:"Guarapuava Digital", linha:"Serviços, notícias e orientações da Prefeitura em um só lugar.", versao:"0.1 (protótipo)" },
+
+  /* >>> LINKS OFICIAIS — troque livremente <<< */
+  links:{
+    site:"https://guarapuava.pr.gov.br/",
+    autoatendimento:"https://guarapuava.atende.net/autoatendimento/servicos/carta-de-servicos",
+    iptu:"https://guarapuava.atende.net/autoatendimento/servicos/carta-de-servicos",
+    guias:"https://guarapuava.atende.net/autoatendimento/servicos/carta-de-servicos",
+    protocolo:"https://guarapuava.atende.net/autoatendimento/servicos/carta-de-servicos",
+    processos:"https://guarapuava.atende.net/autoatendimento/servicos/carta-de-servicos",
+    ouvidoria:"https://guarapuava.atende.net/autoatendimento/servicos/carta-de-servicos",
+    upaubs:"https://secom-guarapuava.github.io/upa-ubs/",
+    negocios:"https://secom-guarapuava.github.io/mais.negocios/",
+    instagram:"https://www.instagram.com/guarapuava_pref/",
+    noticias:"https://guarapuava.pr.gov.br/noticias/"
+  },
+
+  /* >>> NOTÍCIAS — títulos/links reais; resumo e imagem ajustáveis depois <<< */
+  noticias:[
+    { id:"n1", cat:"Cidade", grad:["#0E4FB8","#2C7BF2"], destaque:true,
+      titulo:"Prefeitura abre inscrições para processo seletivo de estagiários",
+      resumo:"Oportunidades para estudantes em diversas áreas. Confira prazos e como se inscrever no edital oficial.",
+      data:"28 mai 2026",
+      url:"https://guarapuava.pr.gov.br/noticias/prefeitura-de-guarapuava-abre-inscricoes-para-processo-seletivo-de-estagiarios/" },
+    { id:"n2", cat:"Economia", grad:["#13864B","#3FB873"],
+      titulo:"Casa do Artesanato será inaugurada para valorizar talentos locais",
+      resumo:"Novo espaço fortalece a economia criativa e dá visibilidade aos artesãos de Guarapuava.",
+      data:"27 mai 2026",
+      url:"https://guarapuava.pr.gov.br/noticias/casa-do-artesanato-sera-inaugurada-neste-sabado-30-para-valorizar-talentos-e-fortalecer-economia-criativa-de-guarapuava/" },
+    { id:"n3", cat:"Gestão", grad:["#0A2A63","#0E4FB8"],
+      titulo:"Consulta pública vai definir prioridades da LDO 2027",
+      resumo:"População pode participar e indicar prioridades para o orçamento do próximo ano.",
+      data:"26 mai 2026",
+      url:"https://guarapuava.pr.gov.br/noticias/prefeitura-abre-consulta-publica-para-definir-prioridades-da-ldo-2027-em-guarapuava/" },
+    { id:"n4", cat:"Educação", grad:["#B5650A","#E58A12"],
+      titulo:"Secretaria de Ciência e Tecnologia e Unicentro abrem PSS para bolsista",
+      resumo:"Processo seletivo simplificado para bolsista. Veja requisitos e período de inscrição.",
+      data:"24 mai 2026",
+      url:"https://guarapuava.pr.gov.br/noticias/secretaria-de-ciencia-tecnologia-e-inovacao-e-unicentro-abrem-pss-para-bolsista-em-guarapuava/" }
+  ],
+
+  /* >>> SERVIÇOS — categoria controla o filtro; url abre o sistema oficial <<< */
+  servicos:[
+    { id:"iptu", cat:"Tributação", icon:"receipt", titulo:"IPTU", desc:"2ª via, parcelas e situação", url:"links.iptu" },
+    { id:"guias", cat:"Tributação", icon:"receipt", titulo:"Emitir guias", desc:"Gere guias de pagamento", url:"links.guias" },
+    { id:"protocolo", cat:"Protocolo", icon:"file", titulo:"Abrir protocolo", desc:"Solicitações e requerimentos", url:"links.protocolo" },
+    { id:"processos", cat:"Protocolo", icon:"file", titulo:"Consultar processos", desc:"Acompanhe um protocolo", url:"links.processos" },
+    { id:"atend", cat:"Cidadão", icon:"building", titulo:"Atendimento ao cidadão", desc:"Carta de serviços online", url:"links.autoatendimento" },
+    { id:"saude", cat:"Saúde", icon:"health", titulo:"Saúde: UBS ou UPA?", desc:"Saiba onde procurar atendimento", screen:"saude" },
+    { id:"educ", cat:"Educação", icon:"grad", titulo:"Educação", desc:"Matrículas, escolas e creches", url:"links.site" },
+    { id:"transito", cat:"Trânsito e obras", icon:"cone", titulo:"Obras e trânsito", desc:"Bloqueios e intervenções", screen:"avisos" },
+    { id:"meio", cat:"Meio ambiente", icon:"leaf", titulo:"Meio ambiente", desc:"Licenças, podas e denúncias", url:"links.site" },
+    { id:"assist", cat:"Assistência social", icon:"users", titulo:"Assistência social", desc:"CRAS, CREAS e programas", url:"links.site" },
+    { id:"negocios", cat:"Cidadão", icon:"building", titulo:"Guarapuava + Negócios", desc:"Apoio a empreendedores", url:"links.negocios" },
+    { id:"ouvidoria", cat:"Ouvidoria", icon:"mega", titulo:"Ouvidoria", desc:"Elogios, dúvidas e denúncias", url:"links.ouvidoria" }
+  ],
+  servCategorias:["Todos","Cidadão","Saúde","Tributação","Protocolo","Educação","Trânsito e obras","Meio ambiente","Assistência social","Ouvidoria"],
+
+  /* >>> SAÚDE — conteúdo baseado no guia oficial UPA/UBS <<< */
+  saude:{
+    ubs:["Consulta de rotina","Vacina (adulto e criança)","Pré-natal","Receita / renovação","Doença crônica (diabetes, pressão)","Curativo e retirada de pontos","Sintomas leves (gripe, dor de ouvido)","Aferir pressão"],
+    upa:["Febre alta que não passa","Dor forte no peito","Falta de ar / crise de asma","Sangramento intenso","Queda ou fratura","Pressão muito alta","Desmaio / convulsão","Sinais de AVC ou infarto"],
+    educativos:[
+      { titulo:"Saúde da mulher", desc:"Conteúdo educativo a ser inserido pela Secretaria de Saúde." },
+      { titulo:"Vulnerabilidade social", desc:"Conteúdo educativo a ser inserido pela Secretaria de Saúde e Assistência Social." },
+      { titulo:"Violência contra a mulher", desc:"Você não está só. Procure apoio pelos canais oficiais abaixo. Em perigo imediato, ligue 190." }
+    ],
+    contatos:[
+      { nome:"SAMU", desc:"Emergência médica", num:"192", urgent:true },
+      { nome:"Bombeiros", desc:"Resgate e incêndio", num:"193", urgent:true },
+      { nome:"Polícia Militar", desc:"Emergência policial", num:"190", urgent:true },
+      { nome:"Central de Atendimento à Mulher", desc:"Orientação e denúncia", num:"180", urgent:false },
+      { nome:"CVV — Apoio emocional", desc:"Prevenção, 24h, sigiloso", num:"188", urgent:false }
+    ]
+  },
+
+  /* >>> AVISOS / BLOQUEIOS — estrutura pronta p/ alimentar depois <<< */
+  blocos:[
+    { id:"b1", tipo:"Bloqueios", rua:"Rua XV de Novembro", trecho:"entre Mal. Floriano e Cap. Rocha", data:"29/05/2026", motivo:"Obras de drenagem", status:"run", statusTxt:"Em andamento", prev:"02/06/2026", map:"https://www.google.com/maps/search/?api=1&query=Rua+XV+de+Novembro+Guarapuava" },
+    { id:"b2", tipo:"Obras", rua:"Av. Manoel Ribas", trecho:"próximo ao nº 1200", data:"27/05/2026", motivo:"Recapeamento asfáltico", status:"run", statusTxt:"Em andamento", prev:"05/06/2026", map:"https://www.google.com/maps/search/?api=1&query=Avenida+Manoel+Ribas+Guarapuava" },
+    { id:"b3", tipo:"Eventos", rua:"Praça Cleve / Centro", trecho:"entorno da praça", data:"31/05/2026", motivo:"Evento cultural — trânsito desviado", status:"prog", statusTxt:"Programado", prev:"31/05/2026 23h", map:"https://www.google.com/maps/search/?api=1&query=Praça+Cleve+Guarapuava" },
+    { id:"b4", tipo:"Obras", rua:"Rua Saldanha Marinho", trecho:"entre Vicente Machado e Sete de Setembro", data:"20/05/2026", motivo:"Troca de rede de água", status:"done", statusTxt:"Liberada", prev:"Concluída", map:"https://www.google.com/maps/search/?api=1&query=Rua+Saldanha+Marinho+Guarapuava" }
+  ],
+  blocoFiltros:["Todos","Bloqueios","Obras","Eventos"],
+
+  /* >>> NOTIFICAÇÕES (mockadas) — pronta p/ push futuro, sem dados pessoais <<< */
+  notifFiltros:["Todas","Urgente","Serviços","Saúde","Trânsito","Notícias","Eventos"],
+  notificacoes:[
+    { cat:"Urgente", cls:"urgent", icon:"alert", titulo:"Alerta de temporal", texto:"Defesa Civil orienta atenção a ventos fortes nas próximas horas.", t:"há 20 min" },
+    { cat:"Trânsito", cls:"transito", icon:"cone", titulo:"Bloqueio na Rua XV de Novembro", texto:"Trecho interditado para obras de drenagem até 02/06.", t:"há 1 h" },
+    { cat:"Saúde", cls:"saude", icon:"health", titulo:"Campanha de vacinação", texto:"UBS abertas em horário estendido nesta semana.", t:"há 3 h" },
+    { cat:"Serviços", cls:"servico", icon:"receipt", titulo:"IPTU 2026", texto:"Cota única com desconto disponível para emissão.", t:"ontem" },
+    { cat:"Eventos", cls:"evento", icon:"calendar", titulo:"Inauguração da Casa do Artesanato", texto:"Sábado, dia 30, aberto ao público.", t:"ontem" },
+    { cat:"Notícias", cls:"noticia", icon:"news", titulo:"Consulta pública LDO 2027", texto:"Participe e ajude a definir prioridades do orçamento.", t:"2 dias" }
+  ],
+
+  /* >>> PAINEL (gestão) — dados SIMULADOS, agregados e anônimos (LGPD) <<< */
+  painel:{
+    kpis:[
+      { icon:"chart", n:"12.480", l:"Acessos (7 dias)", d:"+18%", up:true },
+      { icon:"users", n:"3.920", l:"Pessoas alcançadas", d:"+9%", up:true },
+      { icon:"bell", n:"8.150", l:"Notificações entregues", d:"94% entrega", up:true },
+      { icon:"clock", n:"41%", l:"Taxa de abertura", d:"-2%", up:false }
+    ],
+    acessosDia:[ {d:"Seg",v:62},{d:"Ter",v:74},{d:"Qua",v:58},{d:"Qui",v:88},{d:"Sex",v:100},{d:"Sáb",v:46},{d:"Dom",v:39} ],
+    telas:[ {n:"Início",v:100},{n:"Serviços",v:78},{n:"Notícias",v:64},{n:"Saúde",v:52},{n:"Avisos / Trânsito",v:37} ],
+    bairros:[ {n:"Centro",v:100},{n:"Santa Cruz",v:71},{n:"Boqueirão",v:63},{n:"Batel",v:55},{n:"Trianon",v:44},{n:"Vila Carli",v:38},{n:"Bonsucesso",v:29} ]
+  }
+};
+
+/* ===== Ícones (SVG traço, acompanham sempre um texto) ===== */
+const P = (d)=>`<path d="${d}"/>`;
+const ICO = {
+  bell:'M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z|M10.3 19a1.8 1.8 0 0 0 3.4 0',
+  search:'C|11 11 7|m20 20-3.4-3.4',
+  home:'M3 10.6 12 4l9 6.6|M5 9.8V20h14V9.8',
+  grid:'R3 3 7 7 2|R14 3 7 7 2|R3 14 7 7 2|R14 14 7 7 2',
+  health:'R3 3 18 18 6|M12 8.5v7|M8.5 12h7',
+  alert:'M10.3 4.3 2.6 17.8A1.6 1.6 0 0 0 4 20.2h16a1.6 1.6 0 0 0 1.4-2.4L13.7 4.3a1.6 1.6 0 0 0-3.4 0Z|M12 9.5v4|M12 17h.01',
+  more:'C|5 12 1.4|C|12 12 1.4|C|19 12 1.4',
+  chev:'m9 6 6 6-6 6',
+  back:'M19 12H5|m12 19-7-7 7-7',
+  pin:'M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Z|C|12 10 2.4',
+  phone:'M6.5 4h3l1.5 4-2 1.4a12 12 0 0 0 5 5l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 6.2 2 2 0 0 1 6.5 4Z',
+  receipt:'M6 3h12v18l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3L6 21Z|M9 8h6|M9 12h6',
+  file:'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z|M14 3v5h5|M9 13h6|M9 17h5',
+  building:'M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16|M15 9h3a2 2 0 0 1 2 2v10|M3 21h18|M8 7h3|M8 11h3|M8 15h3',
+  news:'M4 5h13v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z|M17 8h2a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2|M7 8h7|M7 12h7|M7 16h5',
+  cone:'M12 3 7 20h10L12 3Z|M5 20h14|M9.4 11h5.2|M8 15.5h8',
+  leaf:'M5 19C4 12 9 5 19 5c0 10-7 14-12 14-2 0-2-2-2-2Z|M9 15c2-3 5-5 8-6',
+  users:'C|9 8 3|M3.5 20a6 6 0 0 1 11 0|M16 5.4a3 3 0 0 1 0 6|M17.5 14a6 6 0 0 1 3.5 6',
+  mega:'M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z|M15 8a5 5 0 0 1 0 8',
+  grad:'M12 4 2 9l10 5 10-5-10-5Z|M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5',
+  calendar:'R4 5 16 16 3|M8 3v4|M16 3v4|M4 10h16',
+  info:'C|12 12 9|M12 11.5v5|M12 8h.01',
+  ext:'M14 4h6v6|M20 4 11 13|M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5',
+  chart:'M4 4v16h16|R7 12 3 5|R12 8 3 9|R17 14 3 3',
+  shield:'M12 3 5 6v5c0 4 3 7 7 9 4-2 7-5 7-9V6Z|m9 12 2 2 4-4',
+  check:'m5 12 5 5 9-11',
+  clock:'C|12 12 9|M12 7.5v5l3 2',
+  heart:'M12 20s-7-4.5-7-10a3.7 3.7 0 0 1 7-1.8A3.7 3.7 0 0 1 19 10c0 5.5-7 10-7 10Z',
+  globe:'C|12 12 9|M3 12h18|M12 3c2.6 3 2.6 15 0 18|M12 3c-2.6 3-2.6 15 0 18',
+  insta:'R3 3 18 18 5|C|12 12 4|M17 7h.01',
+  map:'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z|M9 4v14|M15 6v14',
+  route:'C|6 18 2.5|C|18 6 2.5|M8 18h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6',
+  list:'M8 6h12|M8 12h12|M8 18h12|M3.5 6h.01|M3.5 12h.01|M3.5 18h.01',
+  download:'M12 3v12|m7 11 5 5 5-5|M5 21h14',
+  share:'M12 16V4|m8 8 4-4 4 4|M6 12v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6',
+  plus:'M12 5v14|M5 12h14'
+};
+function icon(name, cls){
+  const toks = (ICO[name]||ICO.info).split('|');
+  let body="";
+  for(let i=0;i<toks.length;i++){
+    const t=toks[i];
+    if(t==='C'){ const[cx,cy,r]=(toks[++i]||'12 12 6').split(' '); body+=`<circle cx="${cx}" cy="${cy}" r="${r}"/>`; }
+    else if(t[0]==='R'){ const[x,y,w,h,r]=t.slice(1).split(' '); body+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r??1.5}"/>`; }
+    else { body+=`<path d="${t}"/>`; }
+  }
+  return `<svg class="ico ${cls||''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+}
+const grad = (a,b)=>`background:linear-gradient(140deg,${a},${b})`;
+const resolve = (u)=> u && u.startsWith('links.') ? CONFIG.links[u.split('.')[1]] : u;
+
+/* ===== Componentes reutilizáveis ===== */
+/* Ícone pequeno por categoria (thumb compacto) */
+const NEWS_ICON = { "Cidade":"building", "Economia":"chart", "Gestão":"file", "Educação":"grad" };
+
+/* Cena ilustrativa (SVG) por categoria — dá aparência de imagem editorial,
+   sem foto real e sem cara de placeholder. Usa as cores da própria notícia. */
+function newsScene(cat,a,b,uid){
+  const g='ng_'+uid, W='#ffffff';
+  const bg=`<defs><linearGradient id="${g}" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>
+      <rect width="400" height="200" fill="url(#${g})"/>`;
+  const S={
+    "Cidade":`<circle cx="328" cy="46" r="30" fill="${W}" opacity=".14"/>
+      <g fill="${W}">
+        <rect x="34" y="120" width="36" height="80" opacity=".20"/>
+        <rect x="78" y="92" width="32" height="108" opacity=".30"/>
+        <rect x="118" y="134" width="28" height="66" opacity=".18"/>
+        <rect x="154" y="74" width="36" height="126" opacity=".34"/>
+        <rect x="198" y="108" width="32" height="92" opacity=".24"/>
+        <rect x="238" y="88" width="36" height="112" opacity=".30"/>
+        <rect x="282" y="128" width="28" height="72" opacity=".18"/>
+        <rect x="318" y="100" width="34" height="100" opacity=".26"/>
+        <rect x="360" y="120" width="30" height="80" opacity=".20"/>
+      </g>
+      <g fill="${b}" opacity=".45">
+        <rect x="162" y="84" width="6" height="8"/><rect x="174" y="84" width="6" height="8"/>
+        <rect x="162" y="100" width="6" height="8"/><rect x="174" y="100" width="6" height="8"/>
+        <rect x="246" y="98" width="6" height="8"/><rect x="258" y="98" width="6" height="8"/>
+        <rect x="246" y="114" width="6" height="8"/><rect x="258" y="114" width="6" height="8"/>
+      </g>`,
+    "Economia":`<circle cx="320" cy="50" r="26" fill="${W}" opacity=".14"/>
+      <g fill="${W}">
+        <rect x="70" y="138" width="34" height="62" opacity=".22"/>
+        <rect x="120" y="112" width="34" height="88" opacity=".28"/>
+        <rect x="170" y="86" width="34" height="114" opacity=".34"/>
+        <rect x="220" y="66" width="34" height="134" opacity=".40"/>
+      </g>
+      <path d="M64 150 L138 122 L188 96 L300 52" fill="none" stroke="${W}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+      <path d="M276 48 L304 50 L302 78" fill="none" stroke="${W}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`,
+    "Gestão":`<circle cx="332" cy="44" r="22" fill="${W}" opacity=".14"/>
+      <g fill="${W}">
+        <path d="M112 78 L200 42 L288 78 Z" opacity=".30"/>
+        <rect x="112" y="78" width="176" height="12" opacity=".34"/>
+        <rect x="126" y="96" width="14" height="84" opacity=".26"/>
+        <rect x="156" y="96" width="14" height="84" opacity=".26"/>
+        <rect x="186" y="96" width="14" height="84" opacity=".26"/>
+        <rect x="216" y="96" width="14" height="84" opacity=".26"/>
+        <rect x="246" y="96" width="14" height="84" opacity=".26"/>
+        <rect x="104" y="182" width="192" height="14" opacity=".34"/>
+      </g>`,
+    "Educação":`<circle cx="316" cy="52" r="26" fill="${W}" opacity=".14"/>
+      <g fill="${W}">
+        <path d="M120 92 L200 62 L280 92 L200 122 Z" opacity=".36"/>
+        <path d="M150 110 L150 150 Q200 176 250 150 L250 110 L200 130 Z" opacity=".24"/>
+        <rect x="276" y="92" width="5" height="40" opacity=".40"/>
+        <circle cx="278" cy="138" r="7" fill="${W}" opacity=".5"/>
+      </g>`
+  };
+  return `<svg class="scene" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${bg}${S[cat]||S["Cidade"]}</svg>`;
+}
+function newsCard(n, compact){
+  if(compact){
+    const ni = NEWS_ICON[n.cat] || 'news';
+    return `<div class="news compact" data-news="${n.id}">
+      <div class="thumb" style="${grad(n.grad[0],n.grad[1])}">${icon(ni,'thumb-ic')}</div>
+      <div class="body"><span class="pill" style="background:${n.grad[1]}1f;color:${n.grad[0]}">${n.cat}</span>
+      <h4>${n.titulo}</h4><div class="meta">${icon('clock')} ${n.data}</div></div></div>`;
+  }
+  return `<div class="news" data-news="${n.id}">
+    <div class="thumb">${newsScene(n.cat,n.grad[0],n.grad[1],n.id)}<span class="pill" style="color:${n.grad[0]}">${n.cat}</span></div>
+    <div class="body"><h4>${n.titulo}</h4><p>${n.resumo}</p><div class="meta">${icon('clock')} ${n.data}</div></div></div>`;
+}
+/* Tom complementar suave por categoria (fundo claro + ícone saturado).
+   O azul segue dominante no app; aqui entra um toque de cor pra "dar vida". */
+const CAT_TINT = {
+  "Cidadão":["#E8F1FF","#1565E0"],
+  "Saúde":["#E4F6EC","#13864B"],
+  "Tributação":["#E0F5F1","#0E8C7A"],
+  "Protocolo":["#EAE9FD","#5A4BD6"],
+  "Educação":["#FCEFD8","#B5650A"],
+  "Trânsito e obras":["#FDEBDD","#C0560E"],
+  "Meio ambiente":["#E6F6E2","#2F9E44"],
+  "Assistência social":["#F3E9FB","#8A3FD1"],
+  "Ouvidoria":["#E0F3F6","#0E7C9C"]
+};
+const tintFor = (cat)=> CAT_TINT[cat] || ["var(--azul-100)","var(--azul-700)"];
+function serviceCard(s){
+  const act = s.screen ? `data-nav="${s.screen}"` : `data-ext="${resolve(s.url)}"`;
+  const t = tintFor(s.cat);
+  return `<div class="srv" ${act}>
+    <div class="chip" style="background:${t[0]};color:${t[1]}">${icon(s.icon)}</div>
+    <div class="tx"><b>${s.titulo}</b><small>${s.desc}</small></div>
+    <span class="go">${icon('chev')}</span></div>`;
+}
+
+/* ===== Header (brasão + sino) ===== */
+function brandRow(){
+  return `<div class="brandrow">
+    <img class="brasao" src="brasao.png" alt="Brasão oficial de Guarapuava" onerror="this.onerror=null;this.src='brasao-guarapuava.png'"/>
+    <div class="bt"><small>Prefeitura de Guarapuava</small><h1>Guarapuava Digital</h1></div>
+    <button class="iconbtn" data-notif aria-label="Notificações">${icon('bell')}<span class="badge-dot">3</span></button>
+  </div>`;
+}
+function greet(){ const h=new Date().getHours(); return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'; }
+
+/* ===== TELAS ===== */
+const SCREENS = {};
+
+SCREENS.inicio = ()=>`
+  <div class="top">
+    ${brandRow()}
+    <div class="hero-greet">
+      <div class="hi">${greet()}, cidadão</div>
+      <div class="sub">${CONFIG.app.linha}</div>
+    </div>
+    <label class="search">${icon('search')}<input id="homeSearch" type="text" placeholder="O que você precisa hoje?" autocomplete="off"/></label>
+  </div>
+  <div class="sheet">
+    <div class="section">
+      <div class="section-head"><h3>Notícias da Prefeitura</h3><button class="link" data-nav="noticias">Ver todas ${icon('chev')}</button></div>
+      ${newsCard(CONFIG.noticias[0])}
+      ${CONFIG.noticias.slice(1,3).map(n=>newsCard(n,true)).join('')}
+    </div>
+
+    <div class="section">
+      <div class="feature" data-ext="${CONFIG.links.autoatendimento}">
+        <span class="tag">${icon('building')} Carta de serviços</span>
+        <h4>Resolva sem sair de casa</h4>
+        <p>Acesse o autoatendimento oficial da Prefeitura: IPTU, guias, protocolos e mais.</p>
+        <a class="btn btn-light" data-ext="${CONFIG.links.autoatendimento}">Acessar serviços ${icon('ext')}</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>O que você precisa hoje?</h3></div>
+      <div class="quick" id="quickGrid">
+        ${[
+          {t:"IPTU",ic:"receipt",ext:CONFIG.links.iptu,tint:["#E0F5F1","#0E8C7A"]},
+          {t:"Saúde",ic:"health",nav:"saude",tint:["#E4F6EC","#13864B"]},
+          {t:"Protocolos",ic:"file",ext:CONFIG.links.protocolo,tint:["#EAE9FD","#5A4BD6"]},
+          {t:"Guias",ic:"receipt",ext:CONFIG.links.guias,tint:["#E0F5F1","#0E8C7A"]},
+          {t:"Notícias",ic:"news",nav:"noticias",tint:["#E8F1FF","#1565E0"]},
+          {t:"Trânsito",ic:"cone",nav:"avisos",tint:["#FDEBDD","#C0560E"]}
+        ].map(q=>`<div class="qi" data-label="${q.t}" ${q.nav?`data-nav="${q.nav}"`:`data-ext="${q.ext}"`}>
+          <div class="chip" style="background:${q.tint[0]};color:${q.tint[1]}">${icon(q.ic)}</div><span>${q.t}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="alert info" data-nav="saude">
+        ${icon('info')}
+        <div class="tx"><span class="lvl">Orientação</span><b>UBS ou UPA? Saiba onde ir</b>
+        <p>Guia rápido para procurar o atendimento de saúde certo para cada situação.</p></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="alert warn" data-nav="avisos">
+        ${icon('alert')}
+        <div class="tx"><span class="lvl">Trânsito</span><b>2 bloqueios ativos na cidade</b>
+        <p>Veja ruas interditadas, obras e desvios antes de sair.</p></div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+  </div>`;
+
+SCREENS.servicos = ()=>`
+  <div class="top compact">
+    ${brandRow()}
+    <div class="page-title"><h2>Serviços</h2><p>Toque em um serviço para abrir o sistema oficial.</p></div>
+  </div>
+  <div class="sheet">
+    <div class="chips" id="srvChips">
+      ${CONFIG.servCategorias.map((c,i)=>`<button class="chip-f ${i===0?'is-on':''}" data-fcat="${c}">${c}</button>`).join('')}
+    </div>
+    <div id="srvList">${CONFIG.servicos.map(serviceCard).join('')}</div>
+    <div class="note">${icon('shield')} Este app não pede login nem dados pessoais. Os serviços abrem nos sistemas oficiais da Prefeitura.</div>
+    <div class="spacer"></div>
+  </div>`;
+
+SCREENS.saude = ()=>`
+  <div class="top compact">
+    ${brandRow()}
+    <div class="page-title"><h2>Saúde</h2><p>Orientações para procurar o atendimento certo.</p></div>
+  </div>
+  <div class="sheet">
+    <div class="section">
+      <a class="contact urgent" href="tel:192" style="border-width:1.5px">
+        <div class="chip">${icon('phone')}</div>
+        <div class="tx"><b>Emergência com risco de vida?</b><small>Ligue agora para o SAMU</small></div>
+        <span class="num">192</span>
+      </a>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Onde procurar atendimento</h3></div>
+      <div class="duo">
+        <div class="choice ubs" data-ext="${CONFIG.links.upaubs}">
+          ${icon('health')}<b>UBS</b><small>Rotina, prevenção, vacina e sintomas leves.</small>
+          <span class="ver">Quando ir ${icon('chev')}</span>
+        </div>
+        <div class="choice upa" data-ext="${CONFIG.links.upaubs}">
+          ${icon('alert')}<b>UPA 24h</b><small>Urgência: sintomas fortes ou que pioram rápido.</small>
+          <span class="ver">Quando ir ${icon('chev')}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Quando ir na UBS</h3></div>
+      ${CONFIG.saude.ubs.map(t=>`<div class="tic g">${icon('check')}<div><b>${t}</b></div></div>`).join('')}
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Quando ir na UPA</h3></div>
+      ${CONFIG.saude.upa.map(t=>`<div class="tic r">${icon('alert')}<div><b>${t}</b></div></div>`).join('')}
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Orientações e apoio</h3></div>
+      ${CONFIG.saude.educativos.map(e=>`<div class="card"><h4>${e.titulo}</h4><p>${e.desc}</p></div>`).join('')}
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Telefones e canais de apoio</h3></div>
+      ${CONFIG.saude.contatos.map(c=>`<a class="contact ${c.urgent?'urgent':''}" href="tel:${c.num}">
+        <div class="chip">${icon('phone')}</div>
+        <div class="tx"><b>${c.nome}</b><small>${c.desc}</small></div>
+        <span class="num">${c.num}</span></a>`).join('')}
+    </div>
+
+    <a class="btn btn-primary btn-block" data-ext="${CONFIG.links.upaubs}">Abrir guia completo UBS ou UPA ${icon('ext')}</a>
+    <div class="spacer"></div>
+    <div class="note">${icon('info')} Esta área é informativa e não substitui a avaliação de um profissional de saúde. Em risco de vida, ligue 192.</div>
+    <div class="spacer"></div>
+  </div>`;
+
+function blockCard(b){
+  return `<div class="block">
+    <div class="bh">${icon('alert')}<div style="flex:1"><b>${b.rua}</b></div>
+      <span class="status ${b.status}">${b.status==='done'?icon('check'):icon('clock')} ${b.statusTxt}</span></div>
+    <div class="kv"><span class="k">Trecho</span><span class="v">${b.trecho}</span></div>
+    <div class="kv"><span class="k">Motivo</span><span class="v">${b.motivo}</span></div>
+    <div class="kv"><span class="k">Início</span><span class="v">${b.data}</span></div>
+    <div class="kv"><span class="k">Previsão</span><span class="v">${b.prev}</span></div>
+    <a class="btn btn-ghost btn-block" style="margin-top:13px" data-ext="${b.map}">${icon('route')} Ver no mapa</a>
+  </div>`;
+}
+
+SCREENS.avisos = ()=>`
+  <div class="top compact">
+    ${brandRow()}
+    <div class="page-title"><h2>Avisos e Trânsito</h2><p>Bloqueios, obras e pontos de atenção na cidade.</p></div>
+  </div>
+  <div class="sheet">
+    <div class="mapbox" style="margin-bottom:16px">
+      <div class="road r1"></div><div class="road r2"></div>
+      <span class="pin" style="left:34%;top:30%">${icon('pin')}</span>
+      <span class="pin" style="left:60%;top:55%">${icon('pin')}</span>
+      <span class="tagm">${icon('map')} Mapa interativo em breve</span>
+    </div>
+    <div class="chips" id="blkChips">
+      ${CONFIG.blocoFiltros.map((c,i)=>`<button class="chip-f ${i===0?'is-on':''}" data-fblk="${c}">${c}</button>`).join('')}
+    </div>
+    <div id="blkList">${CONFIG.blocos.map(blockCard).join('')}</div>
+    <div class="note">${icon('info')} Dados de exemplo. A estrutura já está pronta para receber bloqueios reais (rua, trecho, motivo, status, previsão e link de rota).</div>
+    <div class="spacer"></div>
+  </div>`;
+
+SCREENS.noticias = ()=>{
+  const cats = ["Todas",...Array.from(new Set(CONFIG.noticias.map(n=>n.cat)))];
+  return `
+  <div class="top compact">
+    ${brandRow()}
+    <div class="page-title"><h2>Notícias</h2><p>Informações oficiais da Prefeitura de Guarapuava.</p></div>
+  </div>
+  <div class="sheet">
+    <div class="chips" id="newsChips">
+      ${cats.map((c,i)=>`<button class="chip-f ${i===0?'is-on':''}" data-fnews="${c}">${c}</button>`).join('')}
+    </div>
+    <div id="newsList">${CONFIG.noticias.map(n=>newsCard(n)).join('')}</div>
+    <a class="btn btn-ghost btn-block" data-ext="${CONFIG.links.noticias}">${icon('globe')} Ver todas no site oficial</a>
+    <div class="spacer"></div>
+  </div>`;
+};
+
+SCREENS.detalhe = (id)=>{
+  const n = CONFIG.noticias.find(x=>x.id===id) || CONFIG.noticias[0];
+  return `
+  <div class="detail-hero" style="background:${n.grad[0]}">
+    ${newsScene(n.cat,n.grad[0],n.grad[1],'d'+n.id)}
+    <button class="iconbtn back-btn" data-back>${icon('back')}</button>
+    <span class="pill" style="color:${n.grad[0]}">${n.cat}</span>
+  </div>
+  <div class="detail-body">
+    <h2>${n.titulo}</h2>
+    <div class="meta" style="display:flex;gap:7px;align-items:center;color:var(--ink-400);font-size:12.5px;font-weight:600;margin-bottom:6px">${icon('clock')} ${n.data} · Prefeitura de Guarapuava</div>
+    <p class="lead">${n.resumo}</p>
+    <p class="txt">Conteúdo completo desta matéria a ser sincronizado com o site oficial da Prefeitura. Neste protótipo, o texto é um resumo e o botão abaixo abre a notícia original.</p>
+    <div class="spacer"></div>
+    <a class="btn btn-primary btn-block" data-ext="${n.url}">Ler no site oficial ${icon('ext')}</a>
+    <div class="spacer"></div>
+  </div>`;
+};
+
+SCREENS.mais = ()=>`
+  <div class="top compact">
+    ${brandRow()}
+    <div class="page-title"><h2>Mais</h2><p>${CONFIG.app.nome} · versão ${CONFIG.app.versao}</p></div>
+  </div>
+  <div class="sheet">
+    <div class="feature" style="background:var(--grad-primary)">
+      <span class="tag">${icon('info')} Sobre o app</span>
+      <h4>Guarapuava na palma da mão</h4>
+      <p>${CONFIG.app.linha} Sem login e sem coleta de dados pessoais.</p>
+    </div>
+
+    <div class="mgroup-t">Canais oficiais</div>
+    <div class="mlist">
+      <a class="mrow" data-ext="${CONFIG.links.site}">${icon('globe')}<b>Site oficial</b><span class="go">${icon('chev')}</span></a>
+      <a class="mrow" data-ext="${CONFIG.links.instagram}">${icon('insta')}<b>Instagram @guarapuava_pref</b><span class="go">${icon('chev')}</span></a>
+      <a class="mrow" data-ext="${CONFIG.links.autoatendimento}">${icon('building')}<b>Carta de serviços</b><span class="go">${icon('chev')}</span></a>
+      <a class="mrow" data-ext="${CONFIG.links.negocios}">${icon('chart')}<b>Guarapuava + Negócios</b><span class="go">${icon('chev')}</span></a>
+    </div>
+
+    <div class="mgroup-t">Telefones úteis</div>
+    <div class="mlist">
+      <a class="mrow" href="tel:192">${icon('phone')}<b>SAMU — 192</b><span class="go">${icon('chev')}</span></a>
+      <a class="mrow" href="tel:193">${icon('phone')}<b>Bombeiros — 193</b><span class="go">${icon('chev')}</span></a>
+      <a class="mrow" href="tel:199">${icon('phone')}<b>Defesa Civil — 199</b><span class="go">${icon('chev')}</span></a>
+      <a class="mrow" data-ext="${CONFIG.links.ouvidoria}">${icon('mega')}<b>Ouvidoria</b><span class="go">${icon('chev')}</span></a>
+    </div>
+
+    <div class="mgroup-t">App</div>
+    <div class="mlist">
+      <div class="mrow" data-install>${icon('download')}<b>Instalar na tela inicial</b><span class="go">${icon('chev')}</span></div>
+      <div class="mrow" data-nav="painel">${icon('chart')}<b>Painel da Prefeitura (gestão)</b><span class="go">${icon('chev')}</span></div>
+      <div class="mrow" data-notif>${icon('bell')}<b>Configurar notificações</b><span class="go">${icon('chev')}</span></div>
+      <div class="mrow" data-priv>${icon('shield')}<b>Política de privacidade (LGPD)</b><span class="go">${icon('chev')}</span></div>
+    </div>
+
+    <div id="installBox" style="display:none;margin-top:11px">
+      <div class="card">
+        <h4>Adicionar à tela inicial</h4>
+        <p><b>iPhone (Safari):</b> toque em ${icon('share')} <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p>
+        <p style="margin-top:8px"><b>Android (Chrome):</b> toque no menu <b>⋮</b> e depois em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>
+        <p class="muted" style="margin-top:8px">Sem loja, sem cadastro: o app fica como um ícone no celular.</p>
+      </div>
+    </div>
+
+    <div id="privBox" style="display:none;margin-top:11px">
+      <div class="card"><h4>Privacidade e LGPD</h4><p>Este protótipo não coleta dados pessoais, não exige cadastro e não armazena CPF, endereço ou telefone. As estatísticas de uso (quando ativadas) são agregadas e anônimas, apenas para melhorar o serviço público.</p></div>
+    </div>
+
+    <div class="mgroup-t">Preferências de notificações <span style="font-weight:600;text-transform:none;letter-spacing:0">(simuladas)</span></div>
+    <div class="mlist" id="prefList">
+      ${["Urgente","Serviços","Saúde","Trânsito","Notícias","Eventos"].map(p=>`
+        <div class="mrow" style="cursor:default"><b>${p}</b><span class="toggle on" data-toggle></span></div>`).join('')}
+    </div>
+    <div class="spacer"></div>
+  </div>`;
+
+SCREENS.painel = ()=>{
+  const pa=CONFIG.painel;
+  return `
+  <div class="top compact">
+    ${brandRow()}
+    <div class="page-title"><h2>Painel da Prefeitura</h2><p>Visão de gestão · dados agregados e anônimos.</p></div>
+  </div>
+  <div class="sheet">
+    <div class="note" style="margin-bottom:14px">${icon('shield')} <b style="color:var(--ink-700)">LGPD:</b>&nbsp;números simulados. Nenhuma informação identifica pessoas — apenas totais de uso e alcance.</div>
+
+    <div class="kpis">
+      ${pa.kpis.map(k=>`<div class="kpi">${icon(k.icon)}<div class="n">${k.n}</div><div class="l">${k.l}</div>
+        <div class="d ${k.up?'up':'dn'}">${icon(k.up?'check':'alert')} ${k.d}</div></div>`).join('')}
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="section-head" style="margin-bottom:6px"><h3>Acessos por dia</h3><span class="muted" style="font-size:12px">últimos 7 dias</span></div>
+      <div class="bars">
+        ${pa.acessosDia.map(b=>`<div class="col"><div class="bar" style="height:${b.v}%"></div><small>${b.d}</small></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="section-head" style="margin-bottom:10px"><h3>Telas mais acessadas</h3></div>
+      <div class="ranklist">
+        ${pa.telas.map(t=>`<div class="rk"><div class="rh"><span>${t.n}</span><span>${t.v}%</span></div><div class="track"><div class="fill" style="width:${t.v}%"></div></div></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="section-head" style="margin-bottom:10px"><h3>Alcance por bairro</h3></div>
+      <div class="ranklist">
+        ${pa.bairros.map(t=>`<div class="rk"><div class="rh"><span>${t.n}</span><span>${t.v}%</span></div><div class="track"><div class="fill" style="width:${t.v}%"></div></div></div>`).join('')}
+      </div>
+    </div>
+    <div class="note" style="margin-top:14px">${icon('info')} Para produção: integrar analytics anônimo (ex.: Matomo ou Firebase com IP anonimizado) e contagem de entregas de push — sempre sem identificar o cidadão.</div>
+    <div class="spacer"></div>
+  </div>`;
+};
+
+function notifContent(filter){
+  filter = filter||"Todas";
+  const list = CONFIG.notificacoes.filter(n=>filter==="Todas"||n.cat===filter);
+  return `
+  <div class="top compact" style="border-radius:0">
+    <div class="brandrow"><button class="iconbtn" data-closenotif aria-label="Voltar">${icon('back')}</button>
+      <div class="bt" style="flex:1"><small>Avisos</small><h1>Notificações</h1></div></div>
+    <div class="chips" style="margin-top:14px;padding-bottom:0">
+      ${CONFIG.notifFiltros.map((c,i)=>`<button class="chip-f ${(c===filter)?'is-on':''}" style="${(c===filter)?'background:#fff;color:var(--azul-700);border-color:#fff':'background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.3)'}" data-fnotif="${c}">${c}</button>`).join('')}
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:18px 16px;background:var(--bg)">
+    ${list.length?list.map(n=>`<div class="notif ${n.cls}">
+      <div class="chip">${icon(n.icon)}</div>
+      <div class="tx"><span class="lab">${n.cat}</span><b>${n.titulo}</b><p>${n.texto}</p><div class="t">${icon('clock')} ${n.t}</div></div>
+    </div>`).join(''):`<div class="note">${icon('info')} Nenhuma notificação nesta categoria.</div>`}
+    <div class="note">${icon('shield')} Notificações simuladas. No app real, os avisos chegam por push — sem cadastro e sem dados pessoais.</div>
+  </div>`;
+}
+
+/* ===== Navegação ===== */
+const TABS=[
+  {id:'inicio',label:'Início',ic:'home'},
+  {id:'servicos',label:'Serviços',ic:'grid'},
+  {id:'saude',label:'Saúde',ic:'health'},
+  {id:'avisos',label:'Avisos',ic:'alert'},
+  {id:'mais',label:'Mais',ic:'more'}
+];
+let current='inicio', backTarget='inicio';
+const viewport=document.getElementById('viewport');
+const tabbar=document.getElementById('tabbar');
+const notifScreen=document.getElementById('notifScreen');
+
+function renderTabs(){
+  tabbar.innerHTML=TABS.map(t=>`<button class="tab ${t.id===current?'is-on':''}" data-tab="${t.id}">${icon(t.ic)}<span>${t.label}</span></button>`).join('');
+}
+function go(name,param){
+  if(!SCREENS[name]) return;
+  if(name==='detalhe') backTarget='noticias';
+  current=name;
+  viewport.innerHTML=SCREENS[name](param);
+  viewport.scrollTop=0;
+  renderTabs();
+  afterRender();
+}
+function afterRender(){
+  const s=document.getElementById('homeSearch');
+  if(s) s.addEventListener('input',()=>{
+    const q=s.value.toLowerCase().trim();
+    document.querySelectorAll('#quickGrid .qi').forEach(qi=>{
+      qi.style.display=(!q||qi.dataset.label.toLowerCase().includes(q))?'':'none';
+    });
+  });
+}
+function setChips(sel,btn){ document.querySelectorAll(sel+' .chip-f').forEach(c=>c.classList.remove('is-on')); btn.classList.add('is-on'); }
+function openNotif(){ notifScreen.innerHTML=notifContent('Todas'); notifScreen.classList.add('is-active'); }
+
+document.addEventListener('click',e=>{
+  let h;
+  if(h=e.target.closest('[data-tab]')){ notifScreen.classList.remove('is-active'); go(h.dataset.tab); return; }
+  if(h=e.target.closest('[data-nav]')){ go(h.dataset.nav); return; }
+  if(h=e.target.closest('[data-news]')){ go('detalhe',h.dataset.news); return; }
+  if(h=e.target.closest('[data-back]')){ go(backTarget); return; }
+  if(h=e.target.closest('[data-closenotif]')){ notifScreen.classList.remove('is-active'); return; }
+  if(h=e.target.closest('[data-notif]')){ openNotif(); return; }
+  if(h=e.target.closest('[data-priv]')){ const b=document.getElementById('privBox'); if(b) b.style.display=(b.style.display==='none')?'block':'none'; return; }
+  if(h=e.target.closest('[data-install]')){ promptInstall(); return; }
+  if(h=e.target.closest('[data-toggle]')){ h.classList.toggle('on'); return; }
+  if(h=e.target.closest('[data-fcat]')){ setChips('#srvChips',h); const c=h.dataset.fcat; document.getElementById('srvList').innerHTML=CONFIG.servicos.filter(s=>c==='Todos'||s.cat===c).map(serviceCard).join(''); return; }
+  if(h=e.target.closest('[data-fblk]')){ setChips('#blkChips',h); const c=h.dataset.fblk; document.getElementById('blkList').innerHTML=CONFIG.blocos.filter(b=>c==='Todos'||b.tipo===c).map(blockCard).join(''); return; }
+  if(h=e.target.closest('[data-fnews]')){ setChips('#newsChips',h); const c=h.dataset.fnews; document.getElementById('newsList').innerHTML=CONFIG.noticias.filter(n=>c==='Todas'||n.cat===c).map(n=>newsCard(n)).join(''); return; }
+  if(h=e.target.closest('[data-fnotif]')){ notifScreen.innerHTML=notifContent(h.dataset.fnotif); return; }
+  if(h=e.target.closest('[data-ext]')){ const u=h.dataset.ext; if(u&&u!=='undefined'&&u!=='null') window.open(u,'_blank','noopener'); return; }
+});
+
+/* ===== Relógio (visual) ===== */
+function tick(){ const d=new Date(); const el=document.getElementById('clock'); if(el) el.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+tick(); setInterval(tick,15000);
+
+/* ===== PWA: instalação + service worker ===== */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredPrompt=e; });
+window.addEventListener('appinstalled',()=>{ deferredPrompt=null; const b=document.getElementById('installBox'); if(b) b.style.display='none'; });
+function promptInstall(){
+  if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.finally(()=>{ deferredPrompt=null; }); return; }
+  const b=document.getElementById('installBox'); if(b) b.style.display=(b.style.display==='none')?'block':'none';
+}
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+
+/* ===== Start ===== */
+renderTabs();
+go('inicio');
+</script>
+</body>
+</html>
