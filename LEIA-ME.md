@@ -35,24 +35,30 @@ Depois de instalado, o app abre offline (o `sw.js` guarda a interface em cache).
 Navegação inferior com 5 abas + telas de apoio:
 
 ```
+(Abertura: splash azul animado → assistente de boas-vindas na 1ª vez)
+
 [ Início ]  [ Serviços ]  [ Saúde ]  [ Avisos ]  [ Mais ]
     │            │            │          │          │
     │            │            │          │          ├─ Canais oficiais (links externos)
     │            │            │          │          ├─ Telefones úteis
-    │            │            │          │          ├─ Painel da Prefeitura (gestão) ──┐
-    │            │            │          │          ├─ Política de privacidade (LGPD)  │
-    │            │            │          │          └─ Preferências de notificações    │
-    │            │            │          └─ Mapa placeholder + cards de bloqueio        │
-    │            │            └─ UBS x UPA, quando ir, apoio, telefones                 │
-    │            └─ Categorias (chips) + cards de serviço → sistemas oficiais           │
-    ├─ Saudação + busca + notícias + carta de serviços + atalhos + avisos               │
-    └─ Notícias (lista) → Detalhe interno → "Ler no site oficial"                       │
-                                                                                        │
-[ Sino no topo ] → Notificações (Urgente, Serviços, Saúde, Trânsito, Notícias, Eventos) │
-                                                       Painel (acessos, telas, bairros) ◄┘
+    │            │            │          │          ├─ Instalar na tela inicial
+    │            │            │          │          ├─ Assistente e meus interesses
+    │            │            │          │          ├─ Política de privacidade (LGPD)
+    │            │            │          │          └─ Meus interesses (temas + bairro)
+    │            │            │          └─ Mapa placeholder + cards de bloqueio
+    │            │            └─ UBS x UPA, quando ir, apoio, telefones
+    │            └─ Categorias (chips) + cards de serviço → sistemas oficiais
+    ├─ Saudação + busca + notícias + carta de serviços + atalhos + avisos
+    └─ Notícias (lista) → Detalhe interno → "Ler no site oficial"
+
+[ Sino no topo ] → Notificações (Urgente, Serviços, Saúde, Trânsito, Notícias, Eventos)
+
+[ admin.html ] → Painel de gestão (acessos, telas, bairros) — ARQUIVO SEPARADO, acesso restrito
 ```
 
-Telas implementadas: **Início, Serviços, Saúde, Avisos/Trânsito, Notícias, Detalhe da notícia, Notificações, Mais e Painel de dados.**
+Telas do app público: **Início, Serviços, Saúde, Avisos/Trânsito, Notícias, Detalhe da notícia, Notificações e Mais**, mais o **assistente de boas-vindas** e a **tela de abertura (splash)**.
+
+> **Painel de gestão saiu do app público.** Os números de acesso não devem ser visíveis ao cidadão, então o painel virou um arquivo separado, **`admin.html`**, de uso interno. Ele **não fica linkado** no app. Antes de publicar, proteja-o com login real (ex.: Firebase Auth) ou restrição da hospedagem.
 
 ---
 
@@ -68,9 +74,15 @@ Tudo fica em **um único objeto `CONFIG`** no topo da tag `<script>` dentro do `
 | Conteúdo de saúde (quando ir UBS/UPA, cards educativos, telefones) | `saude` |
 | Bloqueios de rua (rua, trecho, data, motivo, status, previsão, mapa) | `blocos` |
 | Notificações | `notificacoes` |
-| Números do Painel (acessos, telas, bairros) | `painel` |
+| Temas de interesse do assistente | `topicos` |
+| Lista de bairros (assistente / avisos) | `bairros` |
+| Números do painel de gestão | em `admin.html` (arquivo separado) |
 
 Os links de serviço aceitam dois formatos: `url:"links.iptu"` (aponta para o `links`) ou uma URL direta. Itens internos usam `screen:"saude"`.
+
+**Planilha pronta (`Guarapuava-Digital-CONTEUDO.xlsx`):** abra no Google Sheets (Arquivo → Importar, ou suba no Drive) para editar conteúdo sem mexer no código. Tem abas para Notícias, Bloqueios (com latitude/longitude p/ o mapa), Notificações, Bairros, Tópicos e Links, com menus suspensos e uma aba de Instruções. É a base do "painel" de quem vai abastecer o app — cada secretaria edita a sua aba (proteja por aba em Dados → Proteger intervalos).
+
+**Assistente "Ana" (boas-vindas + ajuda permanente):** na 1ª abertura ela dá boas-vindas (rápido) e pergunta temas de interesse e bairro. Depois disso, fica um **botão flutuante "Ajuda"** em todas as telas: a pessoa toca quando precisar e a Ana **leva direto** ao que quer (notícias, serviços/IPTU, saúde, avisos) e responde dúvidas rápidas, com botões que abrem a tela ou o sistema oficial. As escolhas de interesse ficam **só no aparelho** (sem dado pessoal) e servem para priorizar notícias e, no futuro, direcionar os pushs por tema/bairro. Dá pra reabrir/editar em **Mais → Assistente e meus interesses**. (Hoje é um fluxo guiado; pode virar um chat de IA com respostas livres depois, via API.)
 
 ---
 
@@ -80,7 +92,7 @@ Os links de serviço aceitam dois formatos: `url:"links.iptu"` (aponta para o `l
 
 **Tipografia** — fonte do sistema (rápida e legível), corpo a partir de 15px, títulos 800. **Espaçamento** generoso. **Raios** arredondados (cards 15–20px, botões 14px, chips totais). **Sombras** discretas.
 
-**Componentes reutilizáveis** — header institucional, busca, card de destaque (gradiente), cards de serviço, cards de notícia, cards de alerta (4 níveis), botões (primário/claro/fantasma/perigo), chips de filtro, barra inferior, tela de detalhe, mapa placeholder, cards educativos de saúde, linhas de contato, painel com KPIs e barras.
+**Componentes reutilizáveis** — header institucional, busca, card de destaque (gradiente), cards de serviço, cards de notícia, cards de alerta (4 níveis), botões (primário/claro/fantasma/perigo), chips de filtro, barra inferior, tela de detalhe, **mapa real (Leaflet/OpenStreetMap)** com pinos por status, **assistente em chat dinâmico** (balões + "digitando"), splash de abertura, cards educativos de saúde, linhas de contato.
 
 **Acessibilidade** — bom contraste, alvos de toque grandes, ícones sempre com rótulo, linguagem simples e direta nos botões ("Emitir guia", "Ver no mapa", "Ler no site oficial").
 
@@ -97,11 +109,11 @@ Atende ao seu pedido de acompanhar **acessos, notificações entregues e alcance
 1. **Validar visualmente** com a equipe e secretários (publicar no GitHub Pages e circular o link).
 2. **Revisar conteúdo e URLs** reais de cada serviço (a Carta de Serviços tem links específicos por serviço).
 3. **Notícias automáticas** — conectar ao site oficial via feed/RSS ou API, substituindo o array `noticias`.
-4. **Mapa real** na tela de Avisos (Google Maps / Leaflet) com os bloqueios geolocalizados.
-5. **Push de verdade** — integrar um serviço de notificações (ex.: Firebase Cloud Messaging) mantendo o opt-in anônimo.
+4. **Mapa real** — ✅ já implementado com **Leaflet + OpenStreetMap** (grátis, sem chave) na tela de Avisos, com os bloqueios geolocalizados (lat/long). Opcional trocar por Google Maps depois (exige chave de API + conta de faturamento Google Cloud).
+5. **Push de verdade** — integrar o **Firebase Cloud Messaging** mantendo o opt-in anônimo. O app já captura interesses (temas) e bairro para direcionar os pushs por **tópicos** (ex.: `eventos`, `bairro_centro`, `noticias_saude`).
 6. **Analytics anônimo** para alimentar o Painel com dados reais.
 7. **Porte para React Native + Expo** quando for publicar nas lojas: o design system (cores, tipografia, espaçamentos), a arquitetura de telas e o formato dos dados deste protótipo foram pensados para migrar quase 1:1.
 
 ---
 
-*Protótipo • versão 0.2 (PWA instalável + brasão oficial) • ajustável a qualquer momento.*
+*Protótipo • versão 0.5 (assistente de ajuda com botão flutuante + chat dinâmico + mapa real) • ajustável a qualquer momento.*

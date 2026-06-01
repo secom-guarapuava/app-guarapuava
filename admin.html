@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0B3D91" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Painel da Prefeitura — Guarapuava Digital (acesso restrito)</title>
+<link rel="icon" href="brasao-icon.png" />
+<style>
+:root{
+  --azul-900:#0A2A63; --azul-800:#0B3D91; --azul-700:#0E4FB8; --azul-600:#1565E0;
+  --azul-100:#E8F1FF; --azul-50:#F3F8FF;
+  --grad:linear-gradient(135deg,#0B3D91 0%,#1565E0 58%,#2C7BF2 100%);
+  --ink-900:#0E1726; --ink-700:#33415A; --ink-600:#5A6B86; --ink-500:#8A98AD;
+  --bg:#F4F7FC; --line:#E6ECF5; --verde:#13864B; --vermelho:#C0392B;
+  --sh-1:0 1px 3px rgba(15,27,45,.06),0 6px 18px rgba(15,27,45,.06);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink-900);line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 60px}
+header.top{background:var(--grad);color:#fff;padding:26px 0 30px;position:relative;overflow:hidden}
+header.top::after{content:"";position:absolute;width:360px;height:360px;right:-120px;top:-150px;background:radial-gradient(circle,rgba(255,255,255,.14),transparent 70%);border-radius:50%}
+.head-in{max-width:1080px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:14px;position:relative;z-index:2}
+.head-in img{height:52px;width:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3))}
+.head-in small{opacity:.85;font-size:13px;display:block}
+.head-in h1{font-size:20px;font-weight:800;letter-spacing:.2px}
+.badge{margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700}
+.banner{background:#FFF4E0;border:1px solid #F4D79A;color:#7A4E00;border-radius:14px;padding:13px 16px;margin:18px 0;font-size:13.5px;display:flex;gap:10px}
+.banner b{color:#5A3A00}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--sh-1)}
+.kpi .n{font-size:26px;font-weight:800;margin-top:6px}
+.kpi .l{font-size:13px;color:var(--ink-600)}
+.kpi .d{font-size:12.5px;font-weight:700;margin-top:8px;display:inline-block}
+.kpi .d.up{color:var(--verde)} .kpi .d.dn{color:var(--vermelho)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--sh-1)}
+.card h3{font-size:15px;font-weight:800;margin-bottom:14px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:150px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bar{width:100%;background:var(--grad);border-radius:8px 8px 4px 4px;min-height:6px}
+.col small{font-size:11.5px;color:var(--ink-500)}
+.rk{margin-bottom:12px}
+.rh{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:5px}
+.track{height:9px;background:var(--azul-50);border-radius:99px;overflow:hidden}
+.fill{height:100%;background:var(--grad);border-radius:99px}
+.note{background:var(--azul-50);border:1px solid var(--azul-100);border-radius:14px;padding:13px 15px;font-size:13px;color:var(--ink-700);margin-top:18px}
+.foot{color:var(--ink-500);font-size:12.5px;margin-top:26px;text-align:center}
+@media(max-width:760px){.kpis{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.bars{height:120px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="head-in">
+    <img src="brasao.png" alt="Brasão de Guarapuava" onerror="this.onerror=null;this.src='brasao-guarapuava.png'"/>
+    <div><small>Prefeitura de Guarapuava · uso interno</small><h1>Painel de gestão — Guarapuava Digital</h1></div>
+    <span class="badge">Acesso restrito</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="banner">⚠️ <div><b>Página administrativa.</b> Não deve ser divulgada ao público. Antes de publicar, proteja com login real (ex.: Firebase Auth) ou restrição da hospedagem. Os números abaixo são <b>simulados, agregados e anônimos</b> — nenhuma informação identifica uma pessoa (LGPD).</div></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <div class="card"><h3>Acessos por dia (7 dias)</h3><div class="bars" id="bars"></div></div>
+    <div class="card"><h3>Telas mais acessadas</h3><div id="telas"></div></div>
+  </div>
+
+  <div class="card" style="margin-top:16px"><h3>Alcance por bairro</h3><div id="bairros"></div></div>
+
+  <div class="note">Para produção: alimentar este painel com um analytics anônimo (ex.: Matomo ou Firebase com IP anonimizado) e com a contagem de entregas de push — sempre sem identificar o cidadão. Os mesmos dados podem vir da planilha do Google Sheets usada para abastecer o app.</div>
+  <div class="foot">Guarapuava Digital · painel interno · versão de protótipo</div>
+</div>
+
+<script>
+/* Dados SIMULADOS (substituir por analytics anônimo / planilha na produção) */
+const DATA = {
+  kpis:[
+    { n:"12.480", l:"Acessos (7 dias)", d:"+18%", up:true },
+    { n:"3.920",  l:"Pessoas alcançadas", d:"+9%", up:true },
+    { n:"8.150",  l:"Notificações entregues", d:"94% entrega", up:true },
+    { n:"41%",    l:"Taxa de abertura", d:"-2%", up:false }
+  ],
+  acessosDia:[ {d:"Seg",v:62},{d:"Ter",v:74},{d:"Qua",v:58},{d:"Qui",v:88},{d:"Sex",v:100},{d:"Sáb",v:46},{d:"Dom",v:39} ],
+  telas:[ {n:"Início",v:100},{n:"Serviços",v:78},{n:"Notícias",v:64},{n:"Saúde",v:52},{n:"Avisos / Trânsito",v:37} ],
+  bairros:[ {n:"Centro",v:100},{n:"Santa Cruz",v:71},{n:"Boqueirão",v:63},{n:"Batel",v:55},{n:"Trianon",v:44},{n:"Vila Carli",v:38},{n:"Bonsucesso",v:29} ]
+};
+const $=(id)=>document.getElementById(id);
+$('kpis').innerHTML = DATA.kpis.map(k=>`<div class="kpi"><div class="n">${k.n}</div><div class="l">${k.l}</div><div class="d ${k.up?'up':'dn'}">${k.up?'▲':'▼'} ${k.d}</div></div>`).join('');
+$('bars').innerHTML = DATA.acessosDia.map(b=>`<div class="col"><div class="bar" style="height:${b.v}%"></div><small>${b.d}</small></div>`).join('');
+const rank=(arr)=>arr.map(t=>`<div class="rk"><div class="rh"><span>${t.n}</span><span>${t.v}%</span></div><div class="track"><div class="fill" style="width:${t.v}%"></div></div></div>`).join('');
+$('telas').innerHTML = rank(DATA.telas);
+$('bairros').innerHTML = rank(DATA.bairros);
+</script>
+</body>
+</html>
