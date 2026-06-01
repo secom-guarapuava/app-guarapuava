@@ -1016,6 +1016,7 @@ SCREENS.mais = ()=>`
       <div class="mrow" data-install>${icon('download')}<b>Instalar na tela inicial</b><span class="go">${icon('chev')}</span></div>
       <div class="mrow" data-welcome>${icon('chat')}<b>Assistente e meus interesses</b><span class="go">${icon('chev')}</span></div>
       <div class="mrow" data-notif>${icon('bell')}<b>Notificações recebidas</b><span class="go">${icon('chev')}</span></div>
+      <div class="mrow" data-pushbox>${icon('bell')}<b>Teste de notificações push</b><span class="go">${icon('chev')}</span></div>
       <div class="mrow" data-priv>${icon('shield')}<b>Política de privacidade (LGPD)</b><span class="go">${icon('chev')}</span></div>
     </div>
 
@@ -1025,6 +1026,17 @@ SCREENS.mais = ()=>`
         <p><b>iPhone (Safari):</b> toque em ${icon('share')} <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p>
         <p style="margin-top:8px"><b>Android (Chrome):</b> toque no menu <b>⋮</b> e depois em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>
         <p class="muted" style="margin-top:8px">Sem loja, sem cadastro: o app fica como um ícone no celular.</p>
+      </div>
+    </div>
+
+    <div id="pushBox" style="display:none;margin-top:11px">
+      <div class="card">
+        <h4>Teste de notificações push</h4>
+        <p>Use esta área apenas para validar se o PWA recebe notificações pelo Firebase Cloud Messaging. O token gerado deve ser copiado e colado no teste manual do Firebase Console.</p>
+        <button class="btn btn-primary btn-block" data-enable-push style="margin-top:12px">${icon('bell')} Ativar notificações e gerar token</button>
+        <div id="pushStatus" class="note" style="margin-top:11px">${icon('info')} <span>Aguardando ativação. Primeiro cole a VAPID key no código.</span></div>
+        <textarea id="fcmTokenBox" readonly aria-label="Token Firebase Cloud Messaging" style="display:none;width:100%;min-height:96px;margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:11px;color:var(--ink-700);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical;background:#fff"></textarea>
+        <button class="btn btn-ghost btn-block" data-copy-push-token style="display:none;margin-top:8px">Copiar token</button>
       </div>
     </div>
 
@@ -1295,6 +1307,7 @@ document.addEventListener('click',e=>{
   if(h=e.target.closest('[data-back]')){ go(backTarget); return; }
   if(h=e.target.closest('[data-closenotif]')){ notifScreen.classList.remove('is-active'); return; }
   if(h=e.target.closest('[data-notif]')){ openNotif(); return; }
+  if(h=e.target.closest('[data-pushbox]')){ const b=document.getElementById('pushBox'); if(b) b.style.display=(b.style.display==='none')?'block':'none'; return; }
   if(h=e.target.closest('[data-priv]')){ const b=document.getElementById('privBox'); if(b) b.style.display=(b.style.display==='none')?'block':'none'; return; }
   if(h=e.target.closest('[data-install]')){ promptInstall(); return; }
   if(h=e.target.closest('[data-welcome]')){ openAssistant('help'); return; }
@@ -1331,13 +1344,177 @@ function promptInstall(){
   const b=document.getElementById('installBox'); if(b) b.style.display=(b.style.display==='none')?'block':'none';
 }
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js')
+      .then((reg)=>{ window.guaraSWRegistration=reg; window.dispatchEvent(new CustomEvent('guara-sw-ready',{detail:reg})); })
+      .catch(()=>{});
+  });
 }
 
 /* ===== Start ===== */
 renderTabs();
 go('inicio');
 bootSplash();
+</script>
+
+
+<script type="module">
+/* ============================================================
+   Firebase Cloud Messaging — teste pontual do protótipo PWA
+   ------------------------------------------------------------
+   Antes de testar, substitua FCM_VAPID_KEY pela chave criada em:
+   Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
+   ============================================================ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+import { getMessaging, getToken, onMessage, isSupported as messagingIsSupported } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-messaging.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDWubN_x02rkf6I-pcrjpn5_RxVBwERXDk",
+  authDomain: "guarapuava-digital.firebaseapp.com",
+  projectId: "guarapuava-digital",
+  storageBucket: "guarapuava-digital.firebasestorage.app",
+  messagingSenderId: "63340791037",
+  appId: "1:63340791037:web:0996e4a52e3e81ea022a94",
+  measurementId: "G-M3WS14TQK6"
+};
+
+const FCM_VAPID_KEY = "COLE_SUA_VAPID_KEY_AQUI";
+const TOKEN_STORAGE_KEY = "guarapuava_fcm_token";
+
+const firebaseApp = initializeApp(firebaseConfig);
+analyticsIsSupported().then((ok)=>{ if(ok) getAnalytics(firebaseApp); }).catch(()=>{});
+
+let firebaseMessaging = null;
+let messagingReadyPromise = null;
+let foregroundListenerReady = false;
+
+function getPushEls(){
+  return {
+    status: document.getElementById('pushStatus'),
+    tokenBox: document.getElementById('fcmTokenBox'),
+    copyBtn: document.querySelector('[data-copy-push-token]'),
+    enableBtn: document.querySelector('[data-enable-push]')
+  };
+}
+function setPushStatus(message, isError=false){
+  const {status} = getPushEls();
+  if(!status) return;
+  status.textContent = message;
+  status.style.background = isError ? 'var(--danger-bg)' : 'var(--line-2)';
+  status.style.color = isError ? 'var(--danger)' : 'var(--ink-500)';
+}
+function updateTokenUi(token){
+  const {tokenBox, copyBtn} = getPushEls();
+  if(!tokenBox || !copyBtn) return;
+  tokenBox.value = token || '';
+  tokenBox.style.display = token ? 'block' : 'none';
+  copyBtn.style.display = token ? 'flex' : 'none';
+}
+function syncPushUi(){
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  updateTokenUi(token);
+  if(!document.getElementById('pushStatus')) return;
+  if(FCM_VAPID_KEY === 'COLE_SUA_VAPID_KEY_AQUI'){
+    setPushStatus('Falta colar a VAPID key no código antes de gerar o token.', true);
+    return;
+  }
+  if(!('Notification' in window)){
+    setPushStatus('Este navegador não oferece suporte a notificações Web Push.', true);
+    return;
+  }
+  if(Notification.permission === 'granted' && token){
+    setPushStatus('Notificações autorizadas. Copie o token e envie uma mensagem de teste pelo Firebase Console.');
+  }else if(Notification.permission === 'denied'){
+    setPushStatus('As notificações estão bloqueadas neste navegador. Libere nas configurações do site/app.');
+  }else{
+    setPushStatus('Pronto para testar. Toque em “Ativar notificações e gerar token”.');
+  }
+}
+async function getExistingOrNewSWRegistration(){
+  if(!('serviceWorker' in navigator)) throw new Error('Service Worker não disponível neste navegador.');
+  if(window.guaraSWRegistration) return window.guaraSWRegistration;
+  const reg = await navigator.serviceWorker.register('sw.js');
+  window.guaraSWRegistration = reg;
+  return reg;
+}
+async function getMessagingInstance(){
+  if(messagingReadyPromise) return messagingReadyPromise;
+  messagingReadyPromise = messagingIsSupported().then((supported)=>{
+    if(!supported) throw new Error('Firebase Messaging não é suportado neste navegador/dispositivo.');
+    firebaseMessaging = getMessaging(firebaseApp);
+    if(!foregroundListenerReady){
+      foregroundListenerReady = true;
+      onMessage(firebaseMessaging, (payload)=>{
+        const title = payload?.notification?.title || payload?.data?.title || 'Guarapuava Digital';
+        const body = payload?.notification?.body || payload?.data?.body || 'Nova notificação recebida.';
+        setPushStatus(`Notificação recebida em primeiro plano: ${title} — ${body}`);
+      });
+    }
+    return firebaseMessaging;
+  });
+  return messagingReadyPromise;
+}
+async function enablePushNotifications(){
+  try{
+    if(FCM_VAPID_KEY === 'COLE_SUA_VAPID_KEY_AQUI'){
+      throw new Error('Cole a VAPID key do Firebase em FCM_VAPID_KEY antes de testar.');
+    }
+    if(!('Notification' in window)) throw new Error('Este navegador não tem suporte a notificações.');
+    setPushStatus('Solicitando permissão de notificação...');
+    const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+    if(permission !== 'granted') throw new Error('Permissão de notificação não concedida.');
+
+    setPushStatus('Registrando Service Worker...');
+    const swRegistration = await getExistingOrNewSWRegistration();
+    await navigator.serviceWorker.ready;
+
+    setPushStatus('Gerando token Firebase...');
+    const messaging = await getMessagingInstance();
+    const token = await getToken(messaging, {
+      vapidKey: FCM_VAPID_KEY,
+      serviceWorkerRegistration: swRegistration
+    });
+    if(!token) throw new Error('O Firebase não retornou token. Verifique VAPID key, HTTPS, permissões e Service Worker.');
+
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    updateTokenUi(token);
+    setPushStatus('Token gerado. Copie e cole no Firebase Console para enviar uma notificação de teste.');
+  }catch(err){
+    console.error('[FCM]', err);
+    setPushStatus(err?.message || 'Falha ao ativar notificações.', true);
+  }
+}
+
+document.addEventListener('click', async (event)=>{
+  const enableBtn = event.target.closest('[data-enable-push]');
+  if(enableBtn){
+    event.preventDefault();
+    enableBtn.disabled = true;
+    await enablePushNotifications();
+    enableBtn.disabled = false;
+    return;
+  }
+  const copyBtn = event.target.closest('[data-copy-push-token]');
+  if(copyBtn){
+    event.preventDefault();
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+    if(!token){ setPushStatus('Nenhum token disponível para copiar.', true); return; }
+    try{
+      await navigator.clipboard.writeText(token);
+      setPushStatus('Token copiado. Use em Firebase Console > Cloud Messaging > Send test message.');
+    }catch(_){
+      const {tokenBox} = getPushEls();
+      if(tokenBox){ tokenBox.style.display='block'; tokenBox.select(); }
+      setPushStatus('Não consegui copiar automaticamente. Selecione o token manualmente.');
+    }
+  }
+});
+
+const viewport = document.getElementById('viewport');
+if(viewport){ new MutationObserver(syncPushUi).observe(viewport,{childList:true,subtree:true}); }
+window.addEventListener('guara-sw-ready', syncPushUi);
+syncPushUi();
 </script>
 </body>
 </html>

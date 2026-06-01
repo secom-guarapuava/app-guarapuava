@@ -10,7 +10,11 @@
   "orientation": "portrait",
   "background_color": "#0B3D91",
   "theme_color": "#0B3D91",
-  "categories": ["government", "news", "utilities"],
+  "categories": [
+    "government",
+    "news",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "icon-192.png",
@@ -30,5 +34,6 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "gcm_sender_id": "103953800507"
 }
